@@ -69,14 +69,20 @@
             font-weight: bold;
         }
 
-        table {
+        .table-container {
             margin: 0 auto;
             width: 70%;
-            border-collapse: collapse;
-            background-color: #fff;
+            overflow-y: auto;
+            max-height: 400px; /* Show only 13 rows (adjust based on row height) */
             border: 1px solid #ddd;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 6px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
         th, td {
@@ -90,6 +96,9 @@
             color: white;
             font-weight: bold;
             text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         tbody tr:nth-child(even) {
@@ -114,7 +123,7 @@
         }
 
         @media (max-width: 768px) {
-            table {
+            .table-container {
                 width: 90%;
             }
 
@@ -146,19 +155,21 @@
 
     <div class="player-info" id="player-info"></div>
 
-    <table id="response-table">
-        <thead>
-            <tr>
-                <th>Question</th>
-                <th>Response</th>
-                <th>Correct Answer</th>
-                <th></th> <!-- Blank header for the checkmark column -->
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Data will be inserted here by JavaScript -->
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table id="response-table">
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Response</th>
+                    <th>Correct Answer</th>
+                    <th></th> <!-- Blank header for the checkmark column -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
 
     <script>
         const RESPONSE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=471343857';
@@ -226,8 +237,11 @@
                 handlePlayerSelection(questions);
             }
 
-            // Add event listener for when a player is manually selected
-            selectElement.addEventListener('change', () => handlePlayerSelection(questions));
+            // Reload the page with the selected player name in the URL when the dropdown value changes
+            selectElement.addEventListener('change', () => {
+                const playerName = selectElement.value;
+                window.location.href = `player-responses.html?name=${encodeURIComponent(playerName)}`;
+            });
         }
 
         function handlePlayerSelection(questions) {
