@@ -173,15 +173,48 @@
     </div>
 
     <script>
-        const RESPONSE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:tsv&gid=471343857';
-        const KEY_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:tsv&gid=1537631765';
+        const RESPONSE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=471343857';
+        const KEY_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=1537631765';
 
         let playersData = [];
         let correctAnswers = [];
 
-        // Helper function to remove quotes and trim strings
-        function cleanString(str) {
-            return str.replace(/^"|"$/g, '').trim();
+        // CSV parser to handle commas inside quotes
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentValue = '';
+            let insideQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+
+                if (char === '"') {
+                    if (insideQuotes && text[i + 1] === '"') {
+                        currentValue += '"'; // Handle escaped quotes
+                        i++;
+                    } else {
+                        insideQuotes = !insideQuotes;
+                    }
+                } else if (char === ',' && !insideQuotes) {
+                    currentRow.push(currentValue.trim());
+                    currentValue = '';
+                } else if (char === '\n' && !insideQuotes) {
+                    currentRow.push(currentValue.trim());
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
+            }
+
+            if (currentValue || currentRow.length > 0) {
+                currentRow.push(currentValue.trim());
+                rows.push(currentRow);
+            }
+
+            return rows;
         }
 
         async function fetchData() {
@@ -190,9 +223,8 @@
                 fetch(KEY_SHEET_URL).then(res => res.text())
             ]);
 
-            // Parse TSV data and clean strings
-            const responseRows = responsesData.split('\n').map(row => row.split('\t').map(cleanString));
-            const keyRows = keyData.split('\n').map(row => row.split('\t').map(cleanString));
+            const responseRows = parseCSV(responsesData);
+            const keyRows = parseCSV(keyData);
 
             console.log('Responses Data:', responseRows);
             console.log('Key Data:', keyRows);
@@ -207,7 +239,7 @@
             // Extract player data from the response sheet
             for (let i = 1; i < responseRows.length; i++) {
                 const row = responseRows[i];
-                if (!row[4]) continue;  // Skip rows without a name
+                if (!row[4]) continue;
 
                 playersData.push({
                     rank: Math.ceil(parseFloat(row[0]) || 0),
