@@ -308,13 +308,18 @@
                 responseTd.textContent = responses[index] || 'N/A';
 
                 const correctAnswerTd = document.createElement('td');
-                correctAnswerTd.textContent = correctAnswers[index] || 'N/A';
+                const correctAnswer = correctAnswers[index] || '';
+                correctAnswerTd.textContent = correctAnswer;
 
                 const checkMarkTd = document.createElement('td');
-                const isCorrect = (responses[index] || '').toLowerCase() === (correctAnswers[index] || '').toLowerCase();
-                checkMarkTd.innerHTML = isCorrect
-                    ? '<span class="check-mark correct">&#10004;</span>'
-                    : '<span class="check-mark incorrect">&#10008;</span>';
+
+                // Display checkmark only if correct answer is not empty or "N/A"
+                if (correctAnswer && correctAnswer.toLowerCase() !== 'n/a') {
+                    const isCorrect = (responses[index] || '').toLowerCase() === correctAnswer.toLowerCase();
+                    checkMarkTd.innerHTML = isCorrect
+                        ? '<span class="check-mark correct">&#10004;</span>'
+                        : '<span class="check-mark incorrect">&#10008;</span>';
+                }
 
                 tr.appendChild(questionTd);
                 tr.appendChild(responseTd);
