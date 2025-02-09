@@ -150,12 +150,20 @@
 
         let playersData = [];
 
+        // Helper function to remove surrounding quotes from a string
+        function removeQuotes(str) {
+            if (str.startsWith('"') && str.endsWith('"')) {
+                return str.substring(1, str.length - 1);
+            }
+            return str;
+        }
+
         async function fetchData() {
             const response = await fetch(SHEET_URL);
             const data = await response.text();
 
-            // Parse CSV data and trim each cell
-            const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+            // Parse CSV data, trim cells, and remove quotes
+            const rows = data.split('\n').map(row => row.split(',').map(cell => removeQuotes(cell.trim())));
 
             // Extract questions from row 1 (starting from column F)
             const questions = rows[0].slice(5);
