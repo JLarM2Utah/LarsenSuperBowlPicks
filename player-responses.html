@@ -146,7 +146,7 @@
     </table>
 
     <script>
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRbz5Rj423pNibROIjgStYLy9BrcqE064sYADBipLbsgOoZJR6ne6n1BbWBCcXqEkiYvqlsY2a3utJ7/pub?gid=1631298111&single=true&output=csv';
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=471343857';
 
         let playersData = [];
 
@@ -157,11 +157,11 @@
             // Parse CSV data
             const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
 
-            // Extract questions from row 5 (starting from column F)
-            const questions = rows[4].slice(5);
+            // Extract questions from row 1 (starting from column F)
+            const questions = rows[0].slice(5);
 
-            // Extract player data from rows 6 onward
-            for (let i = 5; i < rows.length; i++) {
+            // Extract player data from rows 2 to 111
+            for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
                 if (row.length === 0 || !row[4]) continue;  // Skip empty rows or rows without a name
 
