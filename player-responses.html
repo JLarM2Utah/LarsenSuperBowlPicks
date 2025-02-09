@@ -194,9 +194,15 @@
             const responseRows = responsesData.split('\n').map(row => row.split(',').map(cleanString));
             const keyRows = keyData.split('\n').map(row => row.split(',').map(cleanString));
 
+            console.log('Responses Data:', responseRows);
+            console.log('Key Data:', keyRows);
+
             // Extract questions and correct answers from the key sheet
             const questions = keyRows[0].slice(5);
             correctAnswers = keyRows[1].slice(5);
+
+            console.log('Extracted Questions:', questions);
+            console.log('Extracted Correct Answers:', correctAnswers);
 
             // Extract player data from the response sheet
             for (let i = 1; i < responseRows.length; i++) {
