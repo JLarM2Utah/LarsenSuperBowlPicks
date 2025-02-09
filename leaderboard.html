@@ -16,7 +16,7 @@
 
         h1 {
             font-size: 2rem;
-            color: #1d428a; /* Dark blue color used by ESPN/NFL branding */
+            color: #1d428a;
             margin-bottom: 20px;
         }
 
@@ -38,7 +38,7 @@
         }
 
         thead {
-            background-color: #1d428a; /* NFL Blue */
+            background-color: #1d428a;
             color: white;
             text-transform: uppercase;
             font-weight: bold;
@@ -73,8 +73,18 @@
             color: #333;
         }
 
+        a.name-link {
+            color: #1d428a;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a.name-link:hover {
+            text-decoration: underline;
+        }
+
         th:hover {
-            background-color: #3b5998; /* Darker blue hover effect */
+            background-color: #3b5998;
         }
 
         /* Responsive adjustments */
@@ -112,7 +122,8 @@
     </table>
 
     <script>
-        const REFRESH_INTERVAL = 60000;  // 60 seconds (60000 ms)
+        const REFRESH_INTERVAL = 60000;  // 60 seconds
+        const RESPONSE_PAGE_URL = 'individualResponse.html';
 
         async function fetchLeaderboardData() {
             const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRbz5Rj423pNibROIjgStYLy9BrcqE064sYADBipLbsgOoZJR6ne6n1BbWBCcXqEkiYvqlsY2a3utJ7/pub?gid=1631298111&single=true&output=csv';
@@ -127,15 +138,30 @@
                 const rows = data.split('\n').map(row => row.split(','));
 
                 rows.forEach((row, index) => {
-                    if (index === 0) return;
-                    if (row.length < 3) return;
+                    if (index === 0) return;  // Skip header row
+                    if (row.length < 3) return;  // Skip invalid rows
 
                     const tr = document.createElement('tr');
-                    row.forEach(cell => {
-                        const td = document.createElement('td');
-                        td.textContent = cell.trim();
-                        tr.appendChild(td);
-                    });
+
+                    // Add rank
+                    const rankTd = document.createElement('td');
+                    rankTd.textContent = row[0].trim();
+                    tr.appendChild(rankTd);
+
+                    // Add name with clickable link
+                    const nameTd = document.createElement('td');
+                    const nameLink = document.createElement('a');
+                    nameLink.href = `${RESPONSE_PAGE_URL}?name=${encodeURIComponent(row[1].trim())}`;
+                    nameLink.textContent = row[1].trim();
+                    nameLink.className = 'name-link';
+                    nameTd.appendChild(nameLink);
+                    tr.appendChild(nameTd);
+
+                    // Add score
+                    const scoreTd = document.createElement('td');
+                    scoreTd.textContent = row[2].trim();
+                    tr.appendChild(scoreTd);
+
                     tbody.appendChild(tr);
                 });
             } catch (error) {
