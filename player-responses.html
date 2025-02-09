@@ -179,7 +179,6 @@
         let playersData = [];
         let correctAnswers = [];
 
-        // CSV parser to handle commas inside quotes
         function parseCSV(text) {
             const rows = [];
             let currentRow = [];
@@ -226,17 +225,9 @@
             const responseRows = parseCSV(responsesData);
             const keyRows = parseCSV(keyData);
 
-            console.log('Responses Data:', responseRows);
-            console.log('Key Data:', keyRows);
-
-            // Extract questions and correct answers from the key sheet
             const questions = keyRows[0].slice(5);
             correctAnswers = keyRows[1].slice(5);
 
-            console.log('Extracted Questions:', questions);
-            console.log('Extracted Correct Answers:', correctAnswers);
-
-            // Extract player data from the response sheet
             for (let i = 1; i < responseRows.length; i++) {
                 const row = responseRows[i];
                 if (!row[4]) continue;
@@ -254,6 +245,9 @@
 
         function populatePlayerDropdown(questions) {
             const selectElement = document.getElementById('player-select');
+
+            // Sort player names alphabetically
+            playersData.sort((a, b) => a.name.localeCompare(b.name));
 
             playersData.forEach(player => {
                 const option = document.createElement('option');
@@ -313,7 +307,6 @@
 
                 const checkMarkTd = document.createElement('td');
 
-                // Display checkmark only if correct answer is not empty or "N/A"
                 if (correctAnswer && correctAnswer.toLowerCase() !== 'n/a') {
                     const isCorrect = (responses[index] || '').toLowerCase() === correctAnswer.toLowerCase();
                     checkMarkTd.innerHTML = isCorrect
