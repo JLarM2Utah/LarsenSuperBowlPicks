@@ -16,7 +16,7 @@
 
         h1 {
             font-size: 2rem;
-            color: #1d428a;
+            color: #1d428a; /* Dark blue color used by ESPN/NFL branding */
             margin-bottom: 20px;
         }
 
@@ -38,7 +38,7 @@
         }
 
         thead {
-            background-color: #1d428a;
+            background-color: #1d428a; /* NFL Blue */
             color: white;
             text-transform: uppercase;
             font-weight: bold;
@@ -73,18 +73,8 @@
             color: #333;
         }
 
-        a.name-link {
-            color: #1d428a;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        a.name-link:hover {
-            text-decoration: underline;
-        }
-
         th:hover {
-            background-color: #3b5998;
+            background-color: #3b5998; /* Darker blue hover effect */
         }
 
         /* Responsive adjustments */
@@ -122,51 +112,87 @@
     </table>
 
     <script>
-        const REFRESH_INTERVAL = 60000;  // 60 seconds
-        const RESPONSE_PAGE_URL = 'player-responses.html';
+        const REFRESH_INTERVAL = 60000;  // 60 seconds (60000 ms)
+        const RESPONSE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=471343857';
 
         async function fetchLeaderboardData() {
-            const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRbz5Rj423pNibROIjgStYLy9BrcqE064sYADBipLbsgOoZJR6ne6n1BbWBCcXqEkiYvqlsY2a3utJ7/pub?gid=1631298111&single=true&output=csv';
-
             try {
-                const response = await fetch(url);
+                const response = await fetch(RESPONSE_SHEET_URL);
                 const data = await response.text();
+
+                const rows = parseCSV(data);
+
+                // Limit data to rows 2 to 113 and filter out invalid rows
+                const playerRows = rows.slice(1, 113).filter(row => {
+                    const name = row[4]?.trim();
+                    return name && name !== '#N/A';
+                });
 
                 const tbody = document.getElementById('leaderboard').querySelector('tbody');
                 tbody.innerHTML = '';
 
-                const rows = data.split('\n').map(row => row.split(','));
-
-                rows.forEach((row, index) => {
-                    if (index === 0) return;  // Skip header row
-                    if (row.length < 3) return;  // Skip invalid rows
-
+                playerRows.forEach(row => {
                     const tr = document.createElement('tr');
 
-                    // Add rank
-                    const rankTd = document.createElement('td');
-                    rankTd.textContent = row[0].trim();
-                    tr.appendChild(rankTd);
+                    // Add clickable link to player-responses.html for name
+                    const rankCell = document.createElement('td');
+                    rankCell.textContent = row[0];
 
-                    // Add name with clickable link
-                    const nameTd = document.createElement('td');
-                    const nameLink = document.createElement('a');
-                    nameLink.href = `${RESPONSE_PAGE_URL}?name=${encodeURIComponent(row[1].trim())}`;
-                    nameLink.textContent = row[1].trim();
-                    nameLink.className = 'name-link';
-                    nameTd.appendChild(nameLink);
-                    tr.appendChild(nameTd);
+                    const nameCell = document.createElement('td');
+                    const link = document.createElement('a');
+                    link.href = `player-responses.html?name=${encodeURIComponent(row[4])}`;
+                    link.textContent = row[4];
+                    nameCell.appendChild(link);
 
-                    // Add score
-                    const scoreTd = document.createElement('td');
-                    scoreTd.textContent = row[2].trim();
-                    tr.appendChild(scoreTd);
+                    const scoreCell = document.createElement('td');
+                    scoreCell.textContent = row[3] || 'N/A';
+
+                    tr.appendChild(rankCell);
+                    tr.appendChild(nameCell);
+                    tr.appendChild(scoreCell);
 
                     tbody.appendChild(tr);
                 });
             } catch (error) {
                 console.error('Error fetching leaderboard data:', error);
             }
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentValue = '';
+            let insideQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+
+                if (char === '"') {
+                    if (insideQuotes && text[i + 1] === '"') {
+                        currentValue += '"'; // Handle escaped quotes
+                        i++;
+                    } else {
+                        insideQuotes = !insideQuotes;
+                    }
+                } else if (char === ',' && !insideQuotes) {
+                    currentRow.push(currentValue.trim());
+                    currentValue = '';
+                } else if (char === '\n' && !insideQuotes) {
+                    currentRow.push(currentValue.trim());
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
+            }
+
+            if (currentValue || currentRow.length > 0) {
+                currentRow.push(currentValue.trim());
+                rows.push(currentRow);
+            }
+
+            return rows;
         }
 
         function sortTable(columnIndex) {
