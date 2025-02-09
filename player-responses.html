@@ -197,9 +197,9 @@
                 if (!row[4]) continue;
 
                 playersData.push({
-                    rank: row[0],    // Assuming rank is in column A
+                    rank: Math.ceil(parseFloat(row[0]) || 0),  // Rank (rounded up to whole number)
                     name: row[4],    // Column E for player name
-                    score: row[2] || 'N/A',  // Assuming score is in column C
+                    score: row[3] || 'N/A',  // Column D contains the score
                     responses: row.slice(5)   // Columns F to AV contain responses
                 });
             }
