@@ -100,6 +100,19 @@
             background-color: #e9ecef;
         }
 
+        .check-mark {
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
         @media (max-width: 768px) {
             table {
                 width: 90%;
@@ -138,6 +151,8 @@
             <tr>
                 <th>Question</th>
                 <th>Response</th>
+                <th>Correct Answer</th>
+                <th></th> <!-- Blank header for the checkmark column -->
             </tr>
         </thead>
         <tbody>
@@ -146,9 +161,11 @@
     </table>
 
     <script>
-        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=471343857';
+        const RESPONSE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=471343857';
+        const KEY_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=1537631765';
 
         let playersData = [];
+        let correctAnswers = [];
 
         // Helper function to remove surrounding quotes from a string
         function removeQuotes(str) {
@@ -159,20 +176,24 @@
         }
 
         async function fetchData() {
-            const response = await fetch(SHEET_URL);
-            const data = await response.text();
+            const [responsesData, keyData] = await Promise.all([
+                fetch(RESPONSE_SHEET_URL).then(res => res.text()),
+                fetch(KEY_SHEET_URL).then(res => res.text())
+            ]);
 
-            // Parse CSV data, trim cells, and remove quotes
-            const rows = data.split('\n').map(row => row.split(',').map(cell => removeQuotes(cell.trim())));
+            // Parse the CSV data and trim each cell
+            const responseRows = responsesData.split('\n').map(row => row.split(',').map(cell => removeQuotes(cell.trim())));
+            const keyRows = keyData.split('\n').map(row => row.split(',').map(cell => removeQuotes(cell.trim())));
 
-            // Extract questions from row 1 (starting from column F)
-            const questions = rows[0].slice(5);
+            // Extract questions and correct answers from the key sheet
+            const questions = keyRows[0].slice(5);
+            correctAnswers = keyRows[1].slice(5);
 
-            // Extract player data from rows 2 to 111
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
+            // Extract player data from the response sheet
+            for (let i = 1; i < responseRows.length; i++) {
+                const row = responseRows[i];
 
-                // Skip empty rows or rows where the name (column E) is missing
+                // Skip rows where the name (column E) is missing
                 if (!row[4]) continue;
 
                 playersData.push({
@@ -233,14 +254,31 @@
 
             questions.forEach((question, index) => {
                 const tr = document.createElement('tr');
-                const questionTd = document.createElement('td');
-                const responseTd = document.createElement('td');
 
+                // Question column
+                const questionTd = document.createElement('td');
                 questionTd.textContent = question;
+
+                // Response column
+                const responseTd = document.createElement('td');
                 responseTd.textContent = responses[index] || 'N/A';
+
+                // Correct answer column
+                const correctAnswerTd = document.createElement('td');
+                correctAnswerTd.textContent = correctAnswers[index] || 'N/A';
+
+                // Checkmark column
+                const checkMarkTd = document.createElement('td');
+                const isCorrect = (responses[index] || '').toLowerCase() === (correctAnswers[index] || '').toLowerCase();
+                checkMarkTd.innerHTML = isCorrect
+                    ? '<span class="check-mark correct">&#10004;</span>'  // Green checkmark
+                    : '<span class="check-mark incorrect">&#10008;</span>';  // Red X
 
                 tr.appendChild(questionTd);
                 tr.appendChild(responseTd);
+                tr.appendChild(correctAnswerTd);
+                tr.appendChild(checkMarkTd);
+
                 tbody.appendChild(tr);
             });
         }
