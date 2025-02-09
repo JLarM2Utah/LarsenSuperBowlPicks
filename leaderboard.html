@@ -134,9 +134,11 @@
                 playerRows.forEach(row => {
                     const tr = document.createElement('tr');
 
-                    // Add clickable link to player-responses.html for name
+                    // Round rank up to whole number
+                    const rank = Math.ceil(parseFloat(row[0]) || 0);
+
                     const rankCell = document.createElement('td');
-                    rankCell.textContent = row[0];
+                    rankCell.textContent = rank;
 
                     const nameCell = document.createElement('td');
                     const link = document.createElement('a');
@@ -153,6 +155,9 @@
 
                     tbody.appendChild(tr);
                 });
+
+                // Sort by rank by default after fetching data
+                sortTable(0, true);
             } catch (error) {
                 console.error('Error fetching leaderboard data:', error);
             }
@@ -195,11 +200,11 @@
             return rows;
         }
 
-        function sortTable(columnIndex) {
+        function sortTable(columnIndex, initialSort = false) {
             const table = document.getElementById('leaderboard');
             const rows = Array.from(table.querySelectorAll('tbody tr'));
 
-            let sortDirection = table.getAttribute('data-sort-direction') === 'asc' ? 'desc' : 'asc';
+            let sortDirection = initialSort ? 'asc' : (table.getAttribute('data-sort-direction') === 'asc' ? 'desc' : 'asc');
             table.setAttribute('data-sort-direction', sortDirection);
 
             rows.sort((a, b) => {
