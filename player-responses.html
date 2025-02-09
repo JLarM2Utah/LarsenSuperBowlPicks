@@ -173,8 +173,8 @@
     </div>
 
     <script>
-        const RESPONSE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=471343857';
-        const KEY_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:csv&gid=1537631765';
+        const RESPONSE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:tsv&gid=471343857';
+        const KEY_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1XAAxEt24U8_Ps2a0cb9TpyNyta66I6iLPMW4l0ZGYJk/gviz/tq?tqx=out:tsv&gid=1537631765';
 
         let playersData = [];
         let correctAnswers = [];
@@ -190,9 +190,9 @@
                 fetch(KEY_SHEET_URL).then(res => res.text())
             ]);
 
-            // Parse CSV and clean strings
-            const responseRows = responsesData.split('\n').map(row => row.split(',').map(cleanString));
-            const keyRows = keyData.split('\n').map(row => row.split(',').map(cleanString));
+            // Parse TSV data and clean strings
+            const responseRows = responsesData.split('\n').map(row => row.split('\t').map(cleanString));
+            const keyRows = keyData.split('\n').map(row => row.split('\t').map(cleanString));
 
             console.log('Responses Data:', responseRows);
             console.log('Key Data:', keyRows);
