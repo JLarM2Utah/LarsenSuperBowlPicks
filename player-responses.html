@@ -38,6 +38,30 @@
             margin-bottom: 20px;
         }
 
+        label {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            width: 50%;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #1d428a;
+            box-shadow: 0 0 5px rgba(29, 66, 138, 0.5);
+        }
+
         .player-info {
             font-size: 1.2rem;
             margin-bottom: 20px;
@@ -89,6 +113,10 @@
             h1 {
                 font-size: 1.5rem;
             }
+
+            select {
+                width: 90%;
+            }
         }
     </style>
 </head>
@@ -98,6 +126,10 @@
     </header>
 
     <h1>Player Responses</h1>
+    <label for="player-select">Select a player:</label>
+    <select id="player-select">
+        <option value="">-- Select a player --</option>
+    </select>
 
     <div class="player-info" id="player-info"></div>
 
@@ -115,6 +147,7 @@
 
     <script>
         const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRbz5Rj423pNibROIjgStYLy9BrcqE064sYADBipLbsgOoZJR6ne6n1BbWBCcXqEkiYvqlsY2a3utJ7/pub?gid=1631298111&single=true&output=csv';
+
         let playersData = [];
 
         async function fetchData() {
@@ -127,47 +160,61 @@
             // Extract questions from row 5 (starting from column F)
             const questions = rows[4].slice(5);
 
-            console.log('Questions extracted:', questions);
-
-            // Extract player responses from rows 6 onward
+            // Extract player data from rows 6 onward
             for (let i = 5; i < rows.length; i++) {
                 const row = rows[i];
                 if (row.length === 0 || !row[4]) continue;  // Skip empty rows or rows without a name
 
-                const playerName = row[4];  // Column E contains the player's name
-                const responses = row.slice(5);  // Columns F to AV contain responses
-
-                console.log(`Extracted data for player: ${playerName}`, responses);
-
                 playersData.push({
-                    name: playerName,
-                    responses: responses
+                    rank: row[0].trim(),   // Assuming rank is in column A
+                    name: row[4].trim(),   // Column E for player name
+                    score: row[2]?.trim() || 'N/A',  // Assuming score is in column C
+                    responses: row.slice(5)  // Columns F to AV contain responses
                 });
             }
 
-            displayPlayerData(questions);
+            populatePlayerDropdown(questions);
         }
 
-        function displayPlayerData(questions) {
-            // Get the player name from the URL parameter
+        function populatePlayerDropdown(questions) {
+            const selectElement = document.getElementById('player-select');
+
+            playersData.forEach(player => {
+                const option = document.createElement('option');
+                option.value = player.name;
+                option.textContent = player.name;
+                selectElement.appendChild(option);
+            });
+
+            // Automatically select a player if a name is passed in the URL
             const urlParams = new URLSearchParams(window.location.search);
             const selectedPlayerName = urlParams.get('name');
 
-            console.log('Selected player name from URL:', selectedPlayerName);
+            if (selectedPlayerName) {
+                selectElement.value = selectedPlayerName;
+                handlePlayerSelection(questions);
+            }
 
-            // Find the player in the data
+            // Add event listener for when a player is manually selected
+            selectElement.addEventListener('change', () => handlePlayerSelection(questions));
+        }
+
+        function handlePlayerSelection(questions) {
+            const selectedPlayerName = document.getElementById('player-select').value;
             const player = playersData.find(p => p.name === selectedPlayerName);
 
             if (player) {
-                // Display player info
-                const playerInfo = document.getElementById('player-info');
-                playerInfo.textContent = `Name: ${player.name}`;
-
-                // Display player responses
+                displayPlayerInfo(player);
                 displayPlayerResponses(questions, player.responses);
             } else {
-                document.getElementById('player-info').textContent = 'Player not found.';
+                clearPlayerInfo();
+                clearPlayerResponses();
             }
+        }
+
+        function displayPlayerInfo(player) {
+            const playerInfo = document.getElementById('player-info');
+            playerInfo.textContent = `Name: ${player.name} | Rank: ${player.rank} | Score: ${player.score}`;
         }
 
         function displayPlayerResponses(questions, responses) {
@@ -186,8 +233,14 @@
                 tr.appendChild(responseTd);
                 tbody.appendChild(tr);
             });
+        }
 
-            console.log('Displayed responses:', responses);
+        function clearPlayerInfo() {
+            document.getElementById('player-info').textContent = '';
+        }
+
+        function clearPlayerResponses() {
+            document.getElementById('response-table').querySelector('tbody').innerHTML = '';
         }
 
         fetchData();
