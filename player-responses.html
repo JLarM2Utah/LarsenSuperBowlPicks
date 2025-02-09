@@ -6,7 +6,7 @@
     <title>Player Responses</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
             background-color: #f8f9fa;
             color: #333;
             margin: 0;
@@ -154,7 +154,7 @@
             const response = await fetch(SHEET_URL);
             const data = await response.text();
 
-            // Parse CSV data
+            // Parse CSV data and trim each cell
             const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
 
             // Extract questions from row 1 (starting from column F)
@@ -163,13 +163,15 @@
             // Extract player data from rows 2 to 111
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                if (row.length === 0 || !row[4]) continue;  // Skip empty rows or rows without a name
+
+                // Skip empty rows or rows where the name (column E) is missing
+                if (!row[4]) continue;
 
                 playersData.push({
-                    rank: row[0].trim(),   // Assuming rank is in column A
-                    name: row[4].trim(),   // Column E for player name
-                    score: row[2]?.trim() || 'N/A',  // Assuming score is in column C
-                    responses: row.slice(5)  // Columns F to AV contain responses
+                    rank: row[0],    // Assuming rank is in column A
+                    name: row[4],    // Column E for player name
+                    score: row[2] || 'N/A',  // Assuming score is in column C
+                    responses: row.slice(5)   // Columns F to AV contain responses
                 });
             }
 
