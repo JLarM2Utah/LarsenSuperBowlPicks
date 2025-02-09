@@ -73,7 +73,7 @@
             margin: 0 auto;
             width: 70%;
             overflow-y: auto;
-            max-height: 700px; /* Adjusted to fit 13 rows */
+            max-height: 600px;
             border: 1px solid #ddd;
             border-radius: 6px;
             background-color: #fff;
@@ -125,7 +125,7 @@
         @media (max-width: 768px) {
             .table-container {
                 width: 90%;
-                max-height: 520px; /* Adjusted for smaller screens */
+                max-height: 520px;
             }
 
             th, td {
@@ -163,7 +163,7 @@
                     <th>Question</th>
                     <th>Response</th>
                     <th>Correct Answer</th>
-                    <th></th> <!-- Blank header for the checkmark column -->
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -179,12 +179,9 @@
         let playersData = [];
         let correctAnswers = [];
 
-        // Helper function to remove surrounding quotes from a string
-        function removeQuotes(str) {
-            if (str.startsWith('"') && str.endsWith('"')) {
-                return str.substring(1, str.length - 1);
-            }
-            return str;
+        // Helper function to remove quotes and trim strings
+        function cleanString(str) {
+            return str.replace(/^"|"$/g, '').trim();
         }
 
         async function fetchData() {
@@ -193,9 +190,9 @@
                 fetch(KEY_SHEET_URL).then(res => res.text())
             ]);
 
-            // Parse the CSV data and trim each cell
-            const responseRows = responsesData.split('\n').map(row => row.split(',').map(cell => removeQuotes(cell.trim())));
-            const keyRows = keyData.split('\n').map(row => row.split(',').map(cell => removeQuotes(cell.trim())));
+            // Parse CSV and clean strings
+            const responseRows = responsesData.split('\n').map(row => row.split(',').map(cleanString));
+            const keyRows = keyData.split('\n').map(row => row.split(',').map(cleanString));
 
             // Extract questions and correct answers from the key sheet
             const questions = keyRows[0].slice(5);
@@ -204,15 +201,13 @@
             // Extract player data from the response sheet
             for (let i = 1; i < responseRows.length; i++) {
                 const row = responseRows[i];
-
-                // Skip rows where the name (column E) is missing
-                if (!row[4]) continue;
+                if (!row[4]) continue;  // Skip rows without a name
 
                 playersData.push({
-                    rank: Math.ceil(parseFloat(row[0]) || 0),  // Rank (rounded up to whole number)
-                    name: row[4],    // Column E for player name
-                    score: row[3] || 'N/A',  // Column D contains the score
-                    responses: row.slice(5)   // Columns F to AV contain responses
+                    rank: Math.ceil(parseFloat(row[0]) || 0),
+                    name: row[4],
+                    score: row[3] || 'N/A',
+                    responses: row.slice(5)
                 });
             }
 
@@ -229,7 +224,6 @@
                 selectElement.appendChild(option);
             });
 
-            // Automatically select a player if a name is passed in the URL
             const urlParams = new URLSearchParams(window.location.search);
             const selectedPlayerName = urlParams.get('name');
 
@@ -238,7 +232,6 @@
                 handlePlayerSelection(questions);
             }
 
-            // Reload the page with the selected player name in the URL when the dropdown value changes
             selectElement.addEventListener('change', () => {
                 const playerName = selectElement.value;
                 window.location.href = `player-responses.html?name=${encodeURIComponent(playerName)}`;
@@ -270,24 +263,20 @@
             questions.forEach((question, index) => {
                 const tr = document.createElement('tr');
 
-                // Question column
                 const questionTd = document.createElement('td');
                 questionTd.textContent = question;
 
-                // Response column
                 const responseTd = document.createElement('td');
                 responseTd.textContent = responses[index] || 'N/A';
 
-                // Correct answer column
                 const correctAnswerTd = document.createElement('td');
                 correctAnswerTd.textContent = correctAnswers[index] || 'N/A';
 
-                // Checkmark column
                 const checkMarkTd = document.createElement('td');
                 const isCorrect = (responses[index] || '').toLowerCase() === (correctAnswers[index] || '').toLowerCase();
                 checkMarkTd.innerHTML = isCorrect
-                    ? '<span class="check-mark correct">&#10004;</span>'  // Green checkmark
-                    : '<span class="check-mark incorrect">&#10008;</span>';  // Red X
+                    ? '<span class="check-mark correct">&#10004;</span>'
+                    : '<span class="check-mark incorrect">&#10008;</span>';
 
                 tr.appendChild(questionTd);
                 tr.appendChild(responseTd);
