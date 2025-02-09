@@ -38,14 +38,6 @@
             margin-bottom: 20px;
         }
 
-        label {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: #333;
-            margin-bottom: 10px;
-            display: block;
-        }
-
         .player-info {
             font-size: 1.2rem;
             margin-bottom: 20px;
@@ -130,22 +122,27 @@
             const data = await response.text();
 
             // Parse CSV data
-            const rows = data.split('\n').map(row => row.split(','));
+            const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim()));
 
-            // Extract the headers and questions (from row 5)
-            const questions = rows[4].slice(5);  // Columns F to AV in row 5
+            // Extract questions from row 5 (starting from column F)
+            const questions = rows[4].slice(5);
 
-            // Extract player responses and names
+            console.log('Questions extracted:', questions);
+
+            // Extract player responses from rows 6 onward
             for (let i = 5; i < rows.length; i++) {
                 const row = rows[i];
-                const playerName = row[4].trim();  // Column E in the row
+                if (row.length === 0 || !row[4]) continue;  // Skip empty rows or rows without a name
 
-                if (playerName) {
-                    playersData.push({
-                        name: playerName,
-                        responses: row.slice(5)  // Columns F to AV contain responses
-                    });
-                }
+                const playerName = row[4];  // Column E contains the player's name
+                const responses = row.slice(5);  // Columns F to AV contain responses
+
+                console.log(`Extracted data for player: ${playerName}`, responses);
+
+                playersData.push({
+                    name: playerName,
+                    responses: responses
+                });
             }
 
             displayPlayerData(questions);
@@ -155,6 +152,8 @@
             // Get the player name from the URL parameter
             const urlParams = new URLSearchParams(window.location.search);
             const selectedPlayerName = urlParams.get('name');
+
+            console.log('Selected player name from URL:', selectedPlayerName);
 
             // Find the player in the data
             const player = playersData.find(p => p.name === selectedPlayerName);
@@ -180,13 +179,15 @@
                 const questionTd = document.createElement('td');
                 const responseTd = document.createElement('td');
 
-                questionTd.textContent = question.trim();
-                responseTd.textContent = responses[index]?.trim() || 'N/A';
+                questionTd.textContent = question;
+                responseTd.textContent = responses[index] || 'N/A';
 
                 tr.appendChild(questionTd);
                 tr.appendChild(responseTd);
                 tbody.appendChild(tr);
             });
+
+            console.log('Displayed responses:', responses);
         }
 
         fetchData();
